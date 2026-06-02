@@ -1,0 +1,10 @@
+# Built extension package
+*.aseprite-extension
+*.zip
+
+# Bundled binaries are produced by `make bin` / fetched per release,
+# not committed to the repo.
+/bin/
+
+# Intermediates
+*.tmp
