@@ -173,8 +173,16 @@ local function run(plugin, data)
 end
 
 local function showDialog(plugin)
+  if not app.isUIAvailable then
+    return
+  end
   local prefs = plugin.preferences
   local sprite = app.activeSprite
+
+  -- Original dimensions, captured once, so the aspect lock and defaults are
+  -- relative to the sprite the user is looking at.
+  local origW = (sprite and sprite.width) or 64
+  local origH = (sprite and sprite.height) or 64
 
   local paletteOptions = {}
   for _, p in ipairs(EMBEDDED_PALETTES) do paletteOptions[#paletteOptions + 1] = p end
@@ -182,11 +190,41 @@ local function showDialog(plugin)
 
   local dlg = Dialog{ title = "Pixelize" }
 
+  -- sync reflects the current control state into the dialog: it hides fields
+  -- that don't apply and greys out the resize controls when resizing is off.
+  -- One function, driven from every relevant handler, instead of scattering
+  -- visibility logic across callbacks.
+  local function sync()
+    local d = dlg.data
+    dlg:modify{ id = "paletteFile",  visible = d.palette == CUSTOM_PALETTE_LABEL }
+    dlg:modify{ id = "width",        enabled = d.resize }
+    dlg:modify{ id = "height",       enabled = d.resize }
+    dlg:modify{ id = "mode",         enabled = d.resize }
+    dlg:modify{ id = "lockRatio",    enabled = d.resize }
+    dlg:modify{ id = "buildMapPath", visible = d.buildMap == true }
+    dlg:modify{ id = "piecesPath",   visible = d.pieces == true }
+  end
+
+  -- Linked resize: px fields are the single source of truth (no percent
+  -- fields, no silent clamping). When the ratio is locked, editing one
+  -- dimension derives the other from the original aspect ratio.
+  local function onWidth()
+    if dlg.data.lockRatio and origW > 0 then
+      dlg:modify{ id = "height", text = tostring(math.max(1, math.floor(dlg.data.width * origH / origW + 0.5))) }
+    end
+  end
+  local function onHeight()
+    if dlg.data.lockRatio and origH > 0 then
+      dlg:modify{ id = "width", text = tostring(math.max(1, math.floor(dlg.data.height * origW / origH + 0.5))) }
+    end
+  end
+
   dlg:combobox{
     id = "palette",
     label = "Palette",
     option = prefs.palette or "nes",
     options = paletteOptions,
+    onchange = sync,
   }
   dlg:file{
     id = "paletteFile",
@@ -201,18 +239,26 @@ local function showDialog(plugin)
     id = "resize",
     label = "Resize before reducing",
     selected = prefs.resize == true,
+    onclick = sync,
   }
   dlg:number{
     id = "width",
     label = "Width",
-    text = tostring(prefs.width or (sprite and sprite.width) or 64),
+    text = tostring(prefs.width or origW),
     decimals = 0,
+    onchange = onWidth,
   }
   dlg:number{
     id = "height",
     label = "Height",
-    text = tostring(prefs.height or (sprite and sprite.height) or 64),
+    text = tostring(prefs.height or origH),
     decimals = 0,
+    onchange = onHeight,
+  }
+  dlg:check{
+    id = "lockRatio",
+    label = "Lock aspect ratio",
+    selected = prefs.lockRatio ~= false,
   }
   dlg:combobox{
     id = "mode",
@@ -233,6 +279,7 @@ local function showDialog(plugin)
     id = "buildMap",
     label = "Write build map",
     selected = prefs.buildMap == true,
+    onclick = sync,
   }
   dlg:file{
     id = "buildMapPath",
@@ -245,6 +292,7 @@ local function showDialog(plugin)
     id = "pieces",
     label = "Write parts list",
     selected = prefs.pieces == true,
+    onclick = sync,
   }
   dlg:file{
     id = "piecesPath",
@@ -263,10 +311,23 @@ local function showDialog(plugin)
 
   dlg:button{ id = "ok", text = "Pixelize", focus = true }
   dlg:button{ id = "cancel", text = "Cancel" }
-  dlg:show()
+
+  sync() -- set initial visibility before the dialog is shown
+
+  -- Restore the last window position if we saved one.
+  if prefs.boundsX and prefs.boundsY then
+    dlg:show{ bounds = Rectangle(prefs.boundsX, prefs.boundsY,
+                                 dlg.bounds.width, dlg.bounds.height) }
+  else
+    dlg:show()
+  end
+
+  prefs.boundsX = dlg.bounds.x
+  prefs.boundsY = dlg.bounds.y
 
   local data = dlg.data
   if not data.ok then return end
+  prefs.lockRatio = data.lockRatio
 
   -- Persist the choices for next time.
   prefs.palette      = data.palette
@@ -290,6 +351,7 @@ function init(plugin)
     id = "pixelize",
     title = "Pixelize…",
     group = "sprite_color",
+    onenabled = function() return app.activeSprite ~= nil end,
     onclick = function() showDialog(plugin) end,
   }
 end

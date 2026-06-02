@@ -75,7 +75,7 @@ override with `make bin ENGINE=/path/to/pixelize`.
 | --- | --- | --- |
 | Palette | `-palette NAME` | Built-ins: `gameboy`, `lego`, `lego-grayscale`, `nes`, `pico8`, `tol-bright`, `wong`. |
 | Palette file | `-palette PATH` | Used when Palette is set to `(custom file…)`. |
-| Resize / Width / Height | `-size WxH` | Off by default; keeps the sprite's size. |
+| Resize / Width / Height | `-size WxH` | Off by default; keeps the sprite's size. Width/height link via **Lock aspect ratio**. |
 | Resize mode | `-mode` | `nn` (default) · `avg` · `bilinear` · `catmullrom`. |
 | Floyd-Steinberg dither | `-dither` | Off snaps each pixel to its nearest color. |
 | Build map | `-build-map PATH` | Per-cell placement for a physical mosaic. |
