@@ -17,6 +17,10 @@ local EMBEDDED_PALETTES = {
   "gameboy", "lego", "lego-grayscale", "nes", "pico8", "tol-bright", "wong",
 }
 local CUSTOM_PALETTE_LABEL = "(custom file…)"
+-- Auto: derive a palette from the image (pixelize -palette auto:N). Needs a
+-- pixelize binary with the quantize feature.
+local AUTO_PALETTE_LABEL = "(auto — derive from image)"
+local QUANTIZE_SPACES = { "auto", "rgb", "oklab" }
 
 local RESIZE_MODES = { "nn", "avg", "bilinear", "catmullrom" }
 
@@ -82,11 +86,30 @@ local function buildCommand(bin, inPath, outPath, data, errPath)
   end
 
   local palette = data.palette
-  if palette == CUSTOM_PALETTE_LABEL then
+  if palette == AUTO_PALETTE_LABEL then
+    palette = "auto:" .. tostring(data.colors)
+  elseif palette == CUSTOM_PALETTE_LABEL then
     palette = data.paletteFile
   end
   parts[#parts + 1] = "-palette"
   parts[#parts + 1] = quote(palette)
+
+  -- Auto-derive options apply only when deriving a palette from the image.
+  if data.palette == AUTO_PALETTE_LABEL then
+    if data.qspace and data.qspace ~= "auto" then
+      parts[#parts + 1] = "-quantize"
+      parts[#parts + 1] = data.qspace
+    end
+    if data.curveInit then
+      parts[#parts + 1] = "-curve-init"
+    end
+  end
+
+  -- Merge near-duplicate colors (works on a derived or a loaded palette).
+  if data.merge and data.merge > 0 then
+    parts[#parts + 1] = "-merge"
+    parts[#parts + 1] = quote(tostring(data.merge))
+  end
 
   if data.dither then
     parts[#parts + 1] = "-dither"
@@ -184,7 +207,7 @@ local function showDialog(plugin)
   local origW = (sprite and sprite.width) or 64
   local origH = (sprite and sprite.height) or 64
 
-  local paletteOptions = {}
+  local paletteOptions = { AUTO_PALETTE_LABEL }
   for _, p in ipairs(EMBEDDED_PALETTES) do paletteOptions[#paletteOptions + 1] = p end
   paletteOptions[#paletteOptions + 1] = CUSTOM_PALETTE_LABEL
 
@@ -196,7 +219,11 @@ local function showDialog(plugin)
   -- visibility logic across callbacks.
   local function sync()
     local d = dlg.data
+    local isAuto = d.palette == AUTO_PALETTE_LABEL
     dlg:modify{ id = "paletteFile",  visible = d.palette == CUSTOM_PALETTE_LABEL }
+    dlg:modify{ id = "colors",       visible = isAuto }
+    dlg:modify{ id = "qspace",       visible = isAuto }
+    dlg:modify{ id = "curveInit",    visible = isAuto }
     dlg:modify{ id = "width",        enabled = d.resize }
     dlg:modify{ id = "height",       enabled = d.resize }
     dlg:modify{ id = "mode",         enabled = d.resize }
@@ -232,6 +259,24 @@ local function showDialog(plugin)
     open = true,
     filename = prefs.paletteFile or "",
     filetypes = { "csv", "hex", "gpl", "json" },
+  }
+  -- Auto-derive controls (shown only when Palette = auto).
+  dlg:slider{
+    id = "colors",
+    label = "Colors",
+    min = 2, max = 256,
+    value = prefs.colors or 16,
+  }
+  dlg:combobox{
+    id = "qspace",
+    label = "Color space",
+    option = prefs.qspace or "auto",
+    options = QUANTIZE_SPACES,
+  }
+  dlg:check{
+    id = "curveInit",
+    label = "Curve init (helps ≥256)",
+    selected = prefs.curveInit == true,
   }
 
   dlg:separator{ text = "Resize" }
@@ -272,6 +317,12 @@ local function showDialog(plugin)
     id = "dither",
     label = "Floyd-Steinberg dither",
     selected = prefs.dither == true,
+  }
+  dlg:number{
+    id = "merge",
+    label = "Merge similar (0=off)",
+    text = tostring(prefs.merge or 0),
+    decimals = 0,
   }
 
   dlg:separator{ text = "Physical mosaic (optional)" }
@@ -332,6 +383,10 @@ local function showDialog(plugin)
   -- Persist the choices for next time.
   prefs.palette      = data.palette
   prefs.paletteFile  = data.paletteFile
+  prefs.colors       = data.colors
+  prefs.qspace       = data.qspace
+  prefs.curveInit    = data.curveInit
+  prefs.merge        = data.merge
   prefs.resize       = data.resize
   prefs.width        = data.width
   prefs.height       = data.height

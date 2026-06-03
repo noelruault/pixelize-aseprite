@@ -42,9 +42,10 @@ Legend: ✅ done · 🟡 partial · ⬜ pending.
 |---|---|---|
 | 0 — robustness & honesty | ✅ | `app.isUIAvailable` guard + `onenabled` gate added; `app.fs.tempPath` used; stderr read-back is best-effort; README has a Permissions section. **Note:** real Win/macOS/Linux run-testing still unverified (no Aseprite in CI yet). |
 | 1 — layout polish | ✅ | Labeled separators, **reactive visibility** via one `sync()`, **linked resize + Lock aspect ratio**, window-position persistence — shipped in `pixelize.lua`. **Deviation (intentional):** built **px-only** linked resize, not px↔%, per discard D1 in `02-ui-reverse-engineering.md`. |
-| 2 — Canvas live preview | ⬜ | Not started. **Correction to carry in:** gate is **API 21–24, feature-detect**, not the "≥20" written below (`02-ui-reverse-engineering.md`). |
-| 3 — swatch strip + mosaic affordances | ⬜ | Not started. |
-| 4 — distribution polish | ⬜ | Makefile packaging exists from the scaffold; icon, screenshots, CI (butler), tagged release pending. |
+| E — engine parity (new) | ✅ | **v0.2.0:** exposes the shipped quantize feature — `Palette → auto` (`-palette auto:N`), **Colors** slider, **Color space** (`-quantize auto\|rgb\|oklab`), **Curve init** (`-curve-init`), and **Merge similar** (`-merge`). Auto-only controls hidden via the existing `sync()`. README + manifest updated. |
+| 2 — Canvas live preview | ⬜ | Not started. **Updated:** Aseprite **1.3 is now the stable release** (v1.3.17.2), so target 1.3 and feature-detect the Canvas — the old "fall back to a 1.2 dialog" path is moot. |
+| 3 — swatch strip + mosaic affordances | ⬜ | Not started. The derived/loaded palette can now be drawn (engine emits it). |
+| 4 — distribution polish | ⬜ | Makefile packaging exists from the scaffold; icon, screenshots, CI (butler), tagged release pending. **Bundle a recent binary** (auto needs the quantize build). |
 
 Backing notes (this folder): `01-extension-quality.md` and
 `02-ui-reverse-engineering.md` (the ADOPT/MAYBE/DISCARD catalogue).

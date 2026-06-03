@@ -1,8 +1,8 @@
 {
   "name": "pixelize",
   "displayName": "Pixelize",
-  "description": "Resize a sprite and snap every pixel to its exact nearest color in a chosen palette (NES, Game Boy, PICO-8, lego, perler, or your own file), and optionally emit a physical-mosaic build map and parts list. A thin front-end for the pixelize engine.",
-  "version": "0.1.0",
+  "description": "Resize a sprite and reduce it to a chosen palette (NES, Game Boy, PICO-8, lego, perler, your own file) or one derived from the image (auto:N), with optional merge and a physical-mosaic build map and parts list. A thin front-end for the pixelize engine.",
+  "version": "0.2.0",
   "author": {
     "name": "Noel Ruault",
     "email": "noelruault.engineer@gmail.com"
