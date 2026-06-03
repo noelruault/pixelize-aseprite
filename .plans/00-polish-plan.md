@@ -34,9 +34,24 @@ patterns of the best public extensions.
 - **JRiggles/Aseprite-Extension-Template** — packaging skeleton + the "Give full
   trust to this script" install documentation pattern.
 
+## Status (updated 2026-06-03)
+
+Legend: ✅ done · 🟡 partial · ⬜ pending.
+
+| Phase | State | Evidence / what's left |
+|---|---|---|
+| 0 — robustness & honesty | ✅ | `app.isUIAvailable` guard + `onenabled` gate added; `app.fs.tempPath` used; stderr read-back is best-effort; README has a Permissions section. **Note:** real Win/macOS/Linux run-testing still unverified (no Aseprite in CI yet). |
+| 1 — layout polish | ✅ | Labeled separators, **reactive visibility** via one `sync()`, **linked resize + Lock aspect ratio**, window-position persistence — shipped in `pixelize.lua`. **Deviation (intentional):** built **px-only** linked resize, not px↔%, per discard D1 in `research/aseprite-plugin/02`. |
+| 2 — Canvas live preview | ⬜ | Not started. **Correction to carry in:** gate is **API 21–24, feature-detect**, not the "≥20" written below (`research/aseprite-plugin/02`). |
+| 3 — swatch strip + mosaic affordances | ⬜ | Not started. |
+| 4 — distribution polish | ⬜ | Makefile packaging exists from the scaffold; icon, screenshots, CI (butler), tagged release pending. |
+
+Backing research: `research/aseprite-plugin/01-extension-quality.md` and
+`02-ui-reverse-engineering.md` (the ADOPT/MAYBE/DISCARD catalogue).
+
 ## Phases
 
-### Phase 0 — Robustness & honesty (no new UI)
+### Phase 0 — Robustness & honesty (no new UI) — ✅ DONE
 The polish floor, independent of looks:
 - Gate features on `app.version` / `app.apiVersion`; guard `app.isUIAvailable` /
   `Dialog() == nil` so the script is `--batch`-safe.
@@ -47,7 +62,7 @@ The polish floor, independent of looks:
   "Give full trust to this script" once. (Research `01 §4`.)
 - All paths via `app.fs.*`; confirm `app.fs.tempPath` usage; test Win/macOS/Linux.
 
-### Phase 1 — Layout polish (works on 1.2.18+, no canvas)
+### Phase 1 — Layout polish (works on 1.2.18+, no canvas) — ✅ DONE
 Make the existing dialog look organized and behave smartly, using only widgets
 available without the Canvas:
 - `separator{ text="…" }` section headers (Source size / Palette / Mosaic / Output).
@@ -58,7 +73,7 @@ available without the Canvas:
 - Persist window position across reopen via `show{ wait=false, bounds=dlg.bounds }`;
   keep persisting settings via `plugin.preferences`.
 
-### Phase 2 — Live before/after preview (Aseprite 1.3+ / apiVersion ≥ 20)
+### Phase 2 — Live before/after preview (Aseprite 1.3+ / apiVersion ≥ 20) — ⬜ PENDING
 The headline upgrade. Gate on `app.apiVersion >= 20`; on older versions fall back to
 the Phase-1 dialog (no preview) gracefully.
 - Non-modal dialog (`show{ wait=false }`) with a `dlg:canvas{}`; draw **before** and
@@ -75,12 +90,12 @@ the Phase-1 dialog (no preview) gracefully.
   full-res only on Apply. (Binary call latency is the constraint — measure; consider
   a "Preview" button if live is too slow.)
 
-### Phase 3 — Palette swatch strip + mosaic affordances
+### Phase 3 — Palette swatch strip + mosaic affordances — ⬜ PENDING
 - A second `dlg:canvas{}` drawing one `fillRect` per derived/loaded palette color;
   hit-test clicks (`ev.x / width`) to set foreground / inspect a color.
 - Surface the parts-list counts (from `-pieces`) and a one-click "open build map".
 
-### Phase 4 — Distribution polish
+### Phase 4 — Distribution polish — ⬜ PENDING
 - Icon, screenshots (preview + permissions), a written README with the install +
   trust flow.
 - CI: GitHub Action building the `.aseprite-extension` and publishing to itch.io via
@@ -92,20 +107,20 @@ the Phase-1 dialog (no preview) gracefully.
 
 Done when **all** of:
 
-1. **Works and degrades gracefully.** Full Canvas live-preview UI on Aseprite 1.3+
+1. 🟡 **Works and degrades gracefully.** Full Canvas live-preview UI on Aseprite 1.3+
    (apiVersion ≥ 20); on 1.2.18–1.2.x it falls back to a functional, organized
    non-preview dialog. No errors when run headless (`--batch`).
-2. **Live preview.** Before/after updates as parameters change (cheap on `onchange`,
+2. ⬜ **Live preview.** Before/after updates as parameters change (cheap on `onchange`,
    expensive on `onrelease`), theme-matched, crisp (no AA), with cached result image
    — no recompute storms, no #3747 layout glitch.
-3. **Polished controls.** Sectioned layout with labeled separators; linked
+3. 🟡 **Polished controls.** Sectioned layout with labeled separators; linked
    width/height + Lock Ratio; reactive show/hide of conditional fields; palette
    swatch strip; window position + preferences persisted.
-4. **Honest permissions.** One-time "Full trust" grant documented with a screenshot;
+4. 🟡 **Honest permissions.** One-time "Full trust" grant documented with a screenshot;
    prompt surface minimized; all file I/O via `app.fs.*`.
-5. **Clean install, cross-platform.** Double-click `.aseprite-extension` installs;
+5. 🟡 **Clean install, cross-platform.** Double-click `.aseprite-extension` installs;
    binary bundled (or found on PATH); verified on Windows, macOS, Linux.
-6. **Shippable.** README with screenshots + permissions section; itch.io listing; CI
+6. ⬜ **Shippable.** README with screenshots + permissions section; itch.io listing; CI
    publishes the packaged extension; tagged release.
 
 **Non-goals for this track:** the palette-derivation algorithm itself (that's
