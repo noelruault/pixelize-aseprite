@@ -9,11 +9,11 @@ patterns of the best public extensions.
 
 ## Grounding
 
-- Research: [`noelruault/research/aseprite-plugin/01-extension-quality.md`](https://github.com/noelruault/research/blob/main/aseprite-plugin/01-extension-quality.md)
+- Reference (this folder): [`01-extension-quality.md`](01-extension-quality.md)
   (manifest, lifecycle, sandbox, packaging, polish checklist) — all verified against
-  the official `aseprite/api` docs and the C++ `security.cpp`.
-- Verified UI capabilities and a working dialog sketch live in the research session
-  notes; key facts restated below with their API gates.
+  the official `aseprite/api` docs and the C++ `security.cpp` — and
+  [`02-ui-reverse-engineering.md`](02-ui-reverse-engineering.md), the ADOPT / MAYBE /
+  DISCARD UI catalogue reverse-engineered from the most polished extensions.
 - Current state: `package.json` + `pixelize.lua` (a basic `Dialog` that shells out
   to the binary and `app.open`s the result) + `Makefile` packaging. Functional, not
   yet polished.
@@ -41,12 +41,12 @@ Legend: ✅ done · 🟡 partial · ⬜ pending.
 | Phase | State | Evidence / what's left |
 |---|---|---|
 | 0 — robustness & honesty | ✅ | `app.isUIAvailable` guard + `onenabled` gate added; `app.fs.tempPath` used; stderr read-back is best-effort; README has a Permissions section. **Note:** real Win/macOS/Linux run-testing still unverified (no Aseprite in CI yet). |
-| 1 — layout polish | ✅ | Labeled separators, **reactive visibility** via one `sync()`, **linked resize + Lock aspect ratio**, window-position persistence — shipped in `pixelize.lua`. **Deviation (intentional):** built **px-only** linked resize, not px↔%, per discard D1 in `research/aseprite-plugin/02`. |
-| 2 — Canvas live preview | ⬜ | Not started. **Correction to carry in:** gate is **API 21–24, feature-detect**, not the "≥20" written below (`research/aseprite-plugin/02`). |
+| 1 — layout polish | ✅ | Labeled separators, **reactive visibility** via one `sync()`, **linked resize + Lock aspect ratio**, window-position persistence — shipped in `pixelize.lua`. **Deviation (intentional):** built **px-only** linked resize, not px↔%, per discard D1 in `02-ui-reverse-engineering.md`. |
+| 2 — Canvas live preview | ⬜ | Not started. **Correction to carry in:** gate is **API 21–24, feature-detect**, not the "≥20" written below (`02-ui-reverse-engineering.md`). |
 | 3 — swatch strip + mosaic affordances | ⬜ | Not started. |
 | 4 — distribution polish | ⬜ | Makefile packaging exists from the scaffold; icon, screenshots, CI (butler), tagged release pending. |
 
-Backing research: `research/aseprite-plugin/01-extension-quality.md` and
+Backing notes (this folder): `01-extension-quality.md` and
 `02-ui-reverse-engineering.md` (the ADOPT/MAYBE/DISCARD catalogue).
 
 ## Phases
